@@ -1,0 +1,36 @@
+name: "Setup sbt"
+description: "Sets up sbt runner script"
+inputs:
+  sbt-runner-version:
+    description: "The runner version (The actual version is controlled via project/build.properties)"
+    required: true
+    default: 1.10.0
+runs:
+  using: "composite"
+  steps:
+    - name: Cache sbt distribution
+      id: cache-dir
+      uses: actions/cache@v4
+      with:
+        path: setupsbt
+        key: ${{ runner.os }}-sbt-${{ inputs.sbt-runner-version }}
+
+    - name: "Install sbt"
+      shell: bash
+      if: steps.cache-dir.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p setupsbt
+        curl -sL https://github.com/sbt/sbt/releases/download/v$SBT_RUNNER_VERSION/sbt-$SBT_RUNNER_VERSION.zip > setupsbt/sbt-$SBT_RUNNER_VERSION.zip
+        pushd setupsbt
+        unzip -o "sbt-$SBT_RUNNER_VERSION.zip"
+        popd
+      env:
+        SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
+
+    - name: "Setup PATH"
+      shell: bash
+      run: |
+        pushd setupsbt
+        ls sbt/bin/sbt
+        echo "$PWD/sbt/bin" >> "$GITHUB_PATH"
+        popd
