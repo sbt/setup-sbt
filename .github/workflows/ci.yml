@@ -1,0 +1,44 @@
+name: CI
+on:
+  pull_request:
+  push:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            java: 17
+            distribution: temurin
+          - os: ubuntu-24.04
+            java: 8
+            distribution: zulu
+          - os: macos-14
+            java: 8
+            distribution: zulu
+          - os: macos-13
+            java: 8
+            distribution: zulu
+          - os: macos-12
+            java: 8
+            distribution: zulu
+          - os: windows-2022
+            java: 8
+            distribution: zulu
+    runs-on: ${{ matrix.os }}
+    env:
+      JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ matrix.distribution }}
+          java-version: ${{ matrix.java }}
+          cache: sbt
+      - uses: ./
+      - name: Build and test
+        shell: bash
+        run: sbt -v +test
