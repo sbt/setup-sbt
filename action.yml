@@ -1,4 +1,4 @@
-name: "Setup sbt"
+name: "Setup sbt installer"
 description: "Sets up sbt runner script"
 inputs:
   sbt-runner-version:
