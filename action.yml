@@ -4,7 +4,7 @@ inputs:
   sbt-runner-version:
     description: "The runner version (The actual version is controlled via project/build.properties)"
     required: true
-    default: 1.10.1
+    default: 1.10.2
 runs:
   using: "composite"
   steps:
