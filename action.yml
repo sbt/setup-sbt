@@ -8,20 +8,32 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Set up cache paths
+      id: cache-paths
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          echo "setupsbt_path=D:/a/_setupsbt" >> $GITHUB_OUTPUT
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          echo "setupsbt_path=/Users/runner/work/_setupsbt" >> $GITHUB_OUTPUT
+        else
+          echo "setupsbt_path=/home/runner/work/_setupsbt" >> $GITHUB_OUTPUT
+        fi
+
     - name: Cache sbt distribution
       id: cache-dir
       uses: actions/cache@v4
       with:
-        path: setupsbt
+        path: ${{ steps.cache-paths.outputs.setupsbt_path }}
         key: ${{ runner.os }}-sbt-${{ inputs.sbt-runner-version }}
 
     - name: "Install sbt"
       shell: bash
       if: steps.cache-dir.outputs.cache-hit != 'true'
       run: |
-        mkdir -p setupsbt
-        curl -sL https://github.com/sbt/sbt/releases/download/v$SBT_RUNNER_VERSION/sbt-$SBT_RUNNER_VERSION.zip > setupsbt/sbt-$SBT_RUNNER_VERSION.zip
-        pushd setupsbt
+        mkdir -p "${{ steps.cache-paths.outputs.setupsbt_path }}"
+        curl -sL https://github.com/sbt/sbt/releases/download/v$SBT_RUNNER_VERSION/sbt-$SBT_RUNNER_VERSION.zip > "${{ steps.cache-paths.outputs.setupsbt_path }}/sbt-$SBT_RUNNER_VERSION.zip"
+        pushd "${{ steps.cache-paths.outputs.setupsbt_path }}"
         unzip -o "sbt-$SBT_RUNNER_VERSION.zip"
         popd
       env:
@@ -30,7 +42,7 @@ runs:
     - name: "Setup PATH"
       shell: bash
       run: |
-        pushd setupsbt
+        pushd "${{ steps.cache-paths.outputs.setupsbt_path }}"
         ls sbt/bin/sbt
         echo "$PWD/sbt/bin" >> "$GITHUB_PATH"
         popd
