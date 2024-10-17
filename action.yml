@@ -7,36 +7,57 @@ inputs:
     default: 1.10.2
 runs:
   using: "composite"
+
   steps:
     - name: Set up cache paths
       id: cache-paths
       shell: bash
       run: |
-        echo "setupsbt_path=$HOME/work/_setupsbt" >> $GITHUB_OUTPUT
+        echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/${{ inputs.sbt-runner-version }}" >> "$GITHUB_OUTPUT"
+        echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
+
+    - name: Check Tool Cache
+      id: cache-tool-dir
+      shell: bash
+      run: |
+        mkdir -p "${{ steps.cache-paths.outputs.sbt_downloadpath }}"
+        if [ -f "${{ steps.cache-paths.outputs.sbt_toolpath }}/sbt/bin/sbt" ]; then
+          echo "cache-hit=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "cache-hit=false" >> "$GITHUB_OUTPUT"
+        fi
 
     - name: Cache sbt distribution
       id: cache-dir
+      if: steps.cache-tool-dir.outputs.cache-hit != 'true'
       uses: actions/cache@v4
       with:
-        path: ${{ steps.cache-paths.outputs.setupsbt_path }}
-        key: ${{ runner.os }}-sbt-${{ inputs.sbt-runner-version }}-1.1.1
+        path: ${{ steps.cache-paths.outputs.sbt_downloadpath }}
+        key: ${{ runner.os }}-sbt-${{ inputs.sbt-runner-version }}-1.1.3
+
+    - name: "Download sbt"
+      shell: bash
+      env:
+        SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
+      if: steps.cache-tool-dir.outputs.cache-hit != 'true' && steps.cache-dir.outputs.cache-hit != 'true'
+      run: |
+        curl -sL "https://github.com/sbt/sbt/releases/download/v$SBT_RUNNER_VERSION/sbt-$SBT_RUNNER_VERSION.zip" > \
+          "${{ steps.cache-paths.outputs.sbt_downloadpath }}/sbt-$SBT_RUNNER_VERSION.zip"
 
     - name: "Install sbt"
       shell: bash
-      if: steps.cache-dir.outputs.cache-hit != 'true'
+      if: steps.cache-tool-dir.outputs.cache-hit != 'true' && steps.cache-tool-dir.outputs.cache-hit != 'true'
       run: |
-        mkdir -p "${{ steps.cache-paths.outputs.setupsbt_path }}"
-        curl -sL https://github.com/sbt/sbt/releases/download/v$SBT_RUNNER_VERSION/sbt-$SBT_RUNNER_VERSION.zip > "${{ steps.cache-paths.outputs.setupsbt_path }}/sbt-$SBT_RUNNER_VERSION.zip"
-        pushd "${{ steps.cache-paths.outputs.setupsbt_path }}"
-        unzip -o "sbt-$SBT_RUNNER_VERSION.zip"
+        mkdir -p "${{ steps.cache-paths.outputs.sbt_toolpath }}"
+
+        pushd "${{ steps.cache-paths.outputs.sbt_downloadpath }}"
+        unzip -o "sbt-${{ inputs.sbt-runner-version }}.zip" -d "${{ steps.cache-paths.outputs.sbt_toolpath }}"
         popd
-      env:
-        SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
 
     - name: "Setup PATH"
       shell: bash
       run: |
-        pushd "${{ steps.cache-paths.outputs.setupsbt_path }}"
+        pushd "${{ steps.cache-paths.outputs.sbt_toolpath }}"
         ls sbt/bin/sbt
         echo "$PWD/sbt/bin" >> "$GITHUB_PATH"
         popd
