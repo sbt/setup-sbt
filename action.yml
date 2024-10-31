@@ -7,7 +7,6 @@ inputs:
     default: 1.10.3
 runs:
   using: "composite"
-
   steps:
     - name: Set up cache paths
       id: cache-paths
@@ -15,7 +14,6 @@ runs:
       run: |
         echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/${{ inputs.sbt-runner-version }}" >> "$GITHUB_OUTPUT"
         echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
-
     - name: Check Tool Cache
       id: cache-tool-dir
       shell: bash
@@ -26,7 +24,6 @@ runs:
         else
           echo "cache-hit=false" >> "$GITHUB_OUTPUT"
         fi
-
     - name: Cache sbt distribution
       id: cache-dir
       if: steps.cache-tool-dir.outputs.cache-hit != 'true'
@@ -34,7 +31,6 @@ runs:
       with:
         path: ${{ steps.cache-paths.outputs.sbt_toolpath }}
         key: ${{ runner.os }}-sbt-${{ inputs.sbt-runner-version }}-1.1.4
-
     - name: "Download and Install sbt"
       shell: bash
       env:
@@ -48,7 +44,6 @@ runs:
         pushd "${{ steps.cache-paths.outputs.sbt_downloadpath }}"
         unzip -o "sbt-${{ inputs.sbt-runner-version }}.zip" -d "${{ steps.cache-paths.outputs.sbt_toolpath }}"
         popd
-
     - name: "Setup PATH"
       shell: bash
       run: |
