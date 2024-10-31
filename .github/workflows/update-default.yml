@@ -28,15 +28,11 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/github-script@v7
+
+      - name: Create Pull Request
         if: steps.update_default.outputs.pushed == 'true'
+        uses: peter-evans/create-pull-request@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              head: "update-default-sbt-${{ steps.update_default.outputs.sbt_version }}",
-              base: "${{ github.ref_name }}",
-              title: "update default sbt version to ${{ steps.update_default.outputs.sbt_version }}"
-            });
+          title: "deps: Update sbt version"
+          branch: generation
+          base: ${{ github.head_ref }}
