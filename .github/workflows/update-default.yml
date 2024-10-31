@@ -1,0 +1,35 @@
+on:
+  push:
+    branches:
+    - main
+jobs:
+  update_default:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - id: update_default
+        run: |
+          SBT_VERSION=$(grep '^sbt\.version' "project/build.properties" | tr '=\r' ' ' | awk '{ print $2; }')
+          yq e -i ".inputs.sbt-runner-version.default = \"${SBT_VERSION}\"" action.yml
+          git add action.yml
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github actions"
+          if git commit -m "update default sbt version to ${SBT_VERSION}"; then
+            git push -f origin HEAD:"update-default-sbt-${SBT_VERSION}"
+            echo "pushed=true" >> $GITHUB_OUTPUT
+            echo "sbt_version=${SBT_VERSION}" >> $GITHUB_OUTPUT
+          else
+            echo "pushed=false" >> $GITHUB_OUTPUT
+          fi
+      - uses: actions/github-script@v7
+        if: steps.update_default.outputs.pushed == 'true'
+        with:
+          script: |
+            await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: "update-default-sbt-${{ steps.update_default.outputs.sbt_version }}",
+              base: "${{ github.ref_name }}",
+              title: "update default sbt version to ${{ steps.update_default.outputs.sbt_version }}"
+            });
