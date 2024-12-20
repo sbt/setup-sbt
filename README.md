@@ -54,13 +54,21 @@ steps:
 Why is this GitHub Action needed?
 ---------------------------------
 
-The runner images on GitHub Action has long included `sbt` runner script. The [initial commit on actions/runner-images](https://github.com/actions/runner-images/pull/96) contains `images/linux/scripts/installers/sbt.sh`. However, the situation has changed in May 2024 when GitHub released the runner image for `macos-13` and `macos-14`, users noticed that they were missing the `sbt` runner script.
+The runner images on GitHub Action had long included `sbt` runner script. The [initial commit on actions/runner-images](https://github.com/actions/runner-images/pull/96) contains `images/linux/scripts/installers/sbt.sh`
+
+### May 2024
+
+However, the situation has changed in May 2024 when GitHub released the runner image for `macos-13` and `macos-14`, users noticed that they were missing the `sbt` runner script.
 
 [actions/runner-images#9369](https://github.com/actions/runner-images/issues/9369) and [actions/runner-images#9837](https://github.com/actions/runner-images/issues/9837) confirmed that this was intentional:
 
 > Thank you for such detail request. But currently we have no plans to add `sbt` on `macOS-13`/`macOS-14`.
 
 Since GitHub Actions are extensible, we thought this providing a setup action would be convenient way to enable `sbt` again on all runner images.
+
+### December 2024
+
+The situation changed again in December 2024 when GitHub dropped sbt from `ubuntu-latest`. So now this same action is needed for Ubuntu-based builds, too.
 
 License
 -------
