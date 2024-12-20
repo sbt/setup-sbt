@@ -21,9 +21,6 @@ jobs:
           - os: macos-13
             java: 8
             distribution: zulu
-          - os: macos-12
-            java: 8
-            distribution: zulu
           - os: windows-2022
             java: 8
             distribution: zulu
