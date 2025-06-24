@@ -15,13 +15,8 @@ runs:
         SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
         SBT_CACHE_KEY_VERSION: 1.1.4
       run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          echo "sbt_toolpath=$RUNNER_TOOL_CACHE\sbt\$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
-          echo "sbt_downloadpath=$RUNNER_TEMP\_sbt" >> "$GITHUB_OUTPUT"
-        else
-          echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
-          echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
-        fi
+        echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
+        echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
         echo "sbt_cachekey=$RUNNER_OS-sbt-$SBT_RUNNER_VERSION-$SBT_CACHE_KEY_VERSION" >> "$GITHUB_OUTPUT"
     - name: Check Tool Cache
       id: cache-tool-dir
@@ -29,7 +24,7 @@ runs:
       env:
         SBT_TOOLPATH: "${{ steps.cache-paths.outputs.sbt_toolpath }}"
       run: |
-        if [[ -f "$SBT_TOOLPATH/sbt/bin/sbt" ]]; then
+        if [ -f "$SBT_TOOLPATH/sbt/bin/sbt" ]; then
           echo "cache-hit=true" >> "$GITHUB_OUTPUT"
         else
           mkdir -p "$SBT_TOOLPATH"
@@ -63,8 +58,4 @@ runs:
       run: |
         cd "$SBT_TOOLPATH"
         ls sbt/bin/sbt
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          echo "$PWD\sbt\bin" >> "$GITHUB_PATH"
-        else
-          echo "$PWD/sbt/bin" >> "$GITHUB_PATH"
-        fi
+        echo "$PWD/sbt/bin" >> "$GITHUB_PATH"
