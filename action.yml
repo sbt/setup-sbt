@@ -13,11 +13,11 @@ runs:
       shell: bash
       env:
         SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
-        SBT_CACHE_KEY_VERSION: 1.1.5
+        SBT_CACHE_KEY_VERSION: 1.1.6
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          echo "sbt_toolpath=$RUNNER_TOOL_CACHE\sbt\$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
-          echo "sbt_downloadpath=$RUNNER_TEMP\_sbt" >> "$GITHUB_OUTPUT"
+          echo "sbt_toolpath=$RUNNER_TOOL_CACHE\\sbt\\$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
+          echo "sbt_downloadpath=$RUNNER_TEMP\\_sbt" >> "$GITHUB_OUTPUT"
         else
           echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
           echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
@@ -64,7 +64,7 @@ runs:
         cd "$SBT_TOOLPATH"
         ls sbt/bin/sbt
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          echo "$PWD\sbt\bin" >> "$GITHUB_PATH"
+          echo "$PWD\\sbt\\bin" >> "$GITHUB_PATH"
         else
           echo "$PWD/sbt/bin" >> "$GITHUB_PATH"
         fi
