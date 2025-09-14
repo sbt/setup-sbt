@@ -12,9 +12,9 @@ Here's an example usage of setup-sbt action.
 env:
   JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
 steps:
-- uses: actions/checkout@v4
+- uses: actions/checkout@v5
 - name: Setup JDK
-  uses: actions/setup-java@v4
+  uses: actions/setup-java@v5
   with:
     distribution: temurin
     java-version: 17
@@ -36,9 +36,9 @@ you might want to pin the runner to a specific version.
 env:
   JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
 steps:
-- uses: actions/checkout@v4
+- uses: actions/checkout@v5
 - name: Setup JDK
-  uses: actions/setup-java@v4
+  uses: actions/setup-java@v5
   with:
     distribution: temurin
     java-version: 17
