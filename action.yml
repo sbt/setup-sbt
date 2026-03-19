@@ -53,9 +53,25 @@ runs:
         mkdir -p "$SBT_DOWNLOADPATH"
         curl -sL "https://github.com/sbt/sbt/releases/download/v$SBT_RUNNER_VERSION/sbt-$SBT_RUNNER_VERSION.zip" > \
           "$SBT_DOWNLOADPATH/sbt-$SBT_RUNNER_VERSION.zip"
+        curl -sL "https://github.com/sbt/sbt/releases/download/v$SBT_RUNNER_VERSION/sbt-$SBT_RUNNER_VERSION.zip.asc" > \
+          "$SBT_DOWNLOADPATH/sbt-$SBT_RUNNER_VERSION.zip.asc"
 
         cd "$SBT_DOWNLOADPATH"
         unzip -o "sbt-$SBT_RUNNER_VERSION.zip" -d "$SBT_TOOLPATH"
+   
+    - name: "Verify the sbt distribution signature"
+      if: steps.cache-tool-dir.outputs.cache-hit != 'true' && steps.cache-dir.outputs.cache-hit != 'true'
+      env:
+        SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
+        SBT_DOWNLOADPATH: "${{ steps.cache-paths.outputs.sbt_downloadpath }}"
+      uses: carabiner-dev/actions/ampel/verify@3f3570da5629881672b9674b1778deecd81b799a
+      with:
+        policy: "https://github.com/carabiner-dev/policies#signature/signature.json"
+        subject: "$SBT_DOWNLOADPATH/sbt-$SBT_RUNNER_VERSION.zip"
+        collector: "fs:$SBT_DOWNLOADPATH/"
+        signer: "cheeso"
+        fail: false
+
     - name: "Setup PATH"
       shell: bash
       env:
