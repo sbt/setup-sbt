@@ -60,17 +60,109 @@ runs:
         unzip -o "sbt-$SBT_RUNNER_VERSION.zip" -d "$SBT_TOOLPATH"
    
     - name: "Verify the sbt distribution signature"
+      id: "ampel-verify"
       if: steps.cache-tool-dir.outputs.cache-hit != 'true' && steps.cache-dir.outputs.cache-hit != 'true'
       env:
         SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
         SBT_DOWNLOADPATH: "${{ steps.cache-paths.outputs.sbt_downloadpath }}"
       uses: carabiner-dev/actions/ampel/verify@3f3570da5629881672b9674b1778deecd81b799a
       with:
-        policy: "https://github.com/carabiner-dev/policies#signature/signature.json"
+        policy: "git+https://github.com/carabiner-dev/policies#signature/signature.json"
         subject: "$SBT_DOWNLOADPATH/sbt-$SBT_RUNNER_VERSION.zip"
         collector: "fs:$SBT_DOWNLOADPATH/"
-        signer: "cheeso"
+        signer: "key::rsassa-pkcs1v15::2EE0EA64E40A89B84B2DF73499E82A75642AC823"
         fail: false
+        attest: false
+        keydata: |
+          -----BEGIN PGP PUBLIC KEY BLOCK-----
+          Comment: Hostname:
+          Version: Hockeypuck 2.2
+
+          xsFNBFVo8ucBEADTNUhKCz/6031bXPy1EOMk3qmsRp1ZIbLNN+KGFEE02qt3/4Hd
+          B2QtrHu1XK/ZZfD84d/RywMj/A14ESBxqaPa4uStOBUeU38+gV05b4Y/jvJ1x4wD
+          kCH+FTz0HlrLpwq/UQEWTX1vTH9wLQQXDcgngs45fVdGe5RDNtvnsd1pP4rp4ZTE
+          jqIJl2fRLd9Jd1uNGv1s9QaLKOVHkprzhphVWil16ET5wIdwivPdi7PFFJv94gXP
+          gbduYZiAYUdywkXHPS18s/6qWMgKcg718rn0orC6oA+zgbUzEJYHqI2OV7HFTzMw
+          /m+tfifWf7dgroOMFtQi5BRzMMoeVOtDXNsOTD9gv5WhzrfyfyLUgnb+nAyH1jHH
+          DZ6f0LdYsD6W9aSEkW0DnmlTKMGUVwRltEgmFCD45VWm/ghwwyVmQ7oyspA6h6r7
+          3ha5PiymCbkYoUFUMxXHhfRPDS/9JL/40+rgiyHEuKlKniIhcbT29oBDXHLfw0fu
+          QSIGEJ3j+T9mguDOmjnZg6BpVkmrXZtxscWJsDeWPCqz42Htx8mrFB/CRu4XKgiZ
+          zpVAbicwEAWZAFS08kwsixHkbuaOMIrj/Kxz4jODdyV2n+I2rZz01FSOBLtidJ00
+          7fUbnzxKzXiGAqw0BMyWSVyB/sA36gLs5RRG5ily0uPQAu2RSvatS+EzfwARAQAB
+          zSNzYnQgYnVpbGQgdG9vbCA8c2NhbGFzYnRAZ21haWwuY29tPsLBjgQTAQgAOAIb
+          AwIeAQIXgBYhBC7g6mTkCom4Sy33NJnoKnVkKsgjBQJpgjMxBQsJCAcCBhUKCQgL
+          AgQWAgMBAAoJEJnoKnVkKsgjlrMP/RXVBWc75ajMyYp1vOiV5CCxcg3QiFQ6stdR
+          pf8C9xhl3J6SD8ixn2rOtHHnetcGXAAWzyADgS8ooTuHBjLGpfukdaR0WdPezDmc
+          Gh8hxHgCxRhY0F/+unoF06/JqJ8Syk9iam2YbMVtsjxScG/dxNRWLYBB1RJob7P0
+          3KsMiVF+EGWkoJNsSd4yEoNomNtLUIynzAWQ77AWBb30p6Pl364gE6JnNY3AXj3D
+          79i1kAjscO31yNYd2LFEFrCm4Ux/AEmBDy+McmiuwMB/Dk6opuA1jT9h2dxC3sJA
+          eMLgo0s6NJdOwz4+q+zF+Wlwj24POuz7Vo22GbAUjTIUCqwlq/LRbzj0E5rI1YvL
+          Pd48x5jhk+8Yles2GEcD4bNnmf0cN5tETlAOXLOgtBL2bBu0ZAFHg7TFyhCRVj9p
+          EyHud901iEoc8xzCigLp4B1OeMB4DpLrg+pCJvykk2NqmBC0R0xWhT7zBOM4iq3K
+          vfa//7TeoR/1CueCGqp7XLffT7/m2XFIm/xWkNgCM5RNfUtxDPNEBUn4ahaiaoB4
+          bMiBw41XgZdKYQUQxprsTIDDeP/ylWYJ+xmWL6LWF9ToAXuw7A8T6JCzHIY4hQYJ
+          gU4Ag6g4Q5ErN/A92jZ0rALcyUnkpzZnsCfCceSVBCe06ApneqcBGW5Ds/rBweqw
+          T/35dLBlwsF4BBMBAgAiBQJVaPLnAhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIX
+          gAAKCRCZ6Cp1ZCrII0tFD/9Y1tCAkHJIquiSgRgHWckIeEtk/28F5dHrGW+bQxJu
+          QkMq0v4a257aAjF7GGSGYcQ+RFHqATTD7+CGOZyse3FMna8w/HFFDqCGl9MMPYnO
+          kYm/tQs5pv3yE6pdIFoSdS1pz18YBERHZ1DRlqJinMs2vfySPnACLtwg+yAgvZ61
+          nceC/YAL57ji+eVXQJ47RIChm+MOFtQaOmDj24TbhVXRwEnUtlya3ePcaftpXEVY
+          ShJKi1pZJcCqcLgS/GyAd55XaYQjhOD5+IeYKHeylM+wn/RYSgrC6TTYZp7vbXWW
+          4Nty5r/ucRVV2D3SHXO0sTFWX/P5IwJkkIMYI0J2xMavDGrHBq3FAEbFcjSH68NM
+          MYClQO59HN7TLNRLCin0YMkiiQRlJazX2y8iW+bvE8oQ6tx/zMVBYVvz4BZbM1mY
+          wOip/SsnqCFmQ9fPDMTWTle220S1kG2aOz1virYNOVDCBEx6F3OFXUIS6kEhO5NG
+          tKoCLuMCU0kTgt41ZsX+2bxHOYHM5pqgZ9SJLIiBHffKdzMrgeoyrGz8NYeAuLC4
+          WAO/NXZPB0mc8Iw+0OnlbtQeMdnOLYAeyQQj9JAIhkwwkNSxpfaFgj7Ty+g/WJBo
+          WDDvF3+Qn/jzREphgTFhuL6/Et/Hv++tGr/y8y1iB38+DqcrwkuQDM62Ke9bN5Ts
+          qM7BTQRVaPLnARAA3ttXa6BmPzOdm6mzR2hBz4MIdQzraZRXKin97UG8pMj0gO/R
+          PrNWrxYDsi64SOAFFRyJTEAFqgPPagdl8vpS/h6D5TIw0edEBV5y+SrUHvOwGRcy
+          64/nUVBjep6a/5sGq6lwEEymLOCZEYSdIuIPOxZwp5IkbaWxVLkkV8qEk918N+d4
+          XwHlPhthKUWzL7Wr8mgOOGcpgvgsmU9GwDervAIqf52zpv5JlF5DzyirXpDyRuNT
+          22HQplaCybQjddtj+t2G6UWm5ynfIHbqlK1TBApH3REJMPqxPgxLUmCpqgwNXCF0
+          pCbUvTHYAyn3xBnJOdSVYigk6yAxE2RKIl3uw8ETpKemXZoXYR0Io3+2QxwfOuN3
+          +dfXd+CnPCSo+AQfgW4UZd+JSDiO/w7precvlTQWcQpABiouNFW22wfurhDUoeDV
+          /NeRbGtobeGZh0DuN7wXTh33lFmYXXODHH7CpY1BIvYIXOAGqyEhpiHJWVMHjGar
+          4Z1D9/ADy6T0cQacl/d5pnR6o6v66PwHanYIR3EKyKl5GUTCixv5HkmCKja20l6f
+          9O31HQEEuj2HxP3oeWRUPMSDYWIoYJjcxMrAVQZE/iPF1Fkkd3HspxQ/5M4UNUT2
+          sM/8yoUI4rg1shnJDv2mbWmDPUmt7tKlYcwPiKds5Wa7PAkU7+LTE1xHiisAEQEA
+          AcLDsgQYAQoAJgIbAhYhBC7g6mTkCom4Sy33NJnoKnVkKsgjBQJpgqCnBQkm5bDA
+          AkDBdCAEGQEKAB0WIQQFs3DcEmFFGWL/41rNTqpZBvm/RgUCVWjy5wAKCRDNTqpZ
+          Bvm/RrpVD/4iJw6EHW3S/Iy+Nz2SprRGQSnk1sx/e/oENn5kceKRgq3QYg+8Y7J/
+          91bXbaI1Wgs5v3ehHqo0+SYJ/l22wnDgEsmTHeIf6CrXJzu9wqrtAGkTUQxmaIGV
+          fk7ZilRry88hVyOkpYrDzi00hzx260lDUtBgFHYR1GyJBsN5u5xlAZ1xkC35wBo7
+          j6DuFNoJBzi4RzgWYHsWMtjrZYVkPvdf3idHN69hlbSZ2If+6VAPICri0O/N7+mc
+          2e4H9w3GWG1gkE4vPuDGN1+hHVlGRNLRI3XWcKLCHWlD5IF5QUpEOGV9w0tbQyZC
+          CKj95Vaugq0WbslDxmBn+A8KsNlVpChPPL7P5KEaJBArZn2eHtlBCf8JHaigZ2rA
+          czOdEnFdaMRsLhWBOtv6Q2HQpOsLHl7Kz+o+Qll93t+VQuKu7+cfRuCLwg4P4/+K
+          uBOzWjOK9HqJXvTMDURy4ZR0lSAC9YKrfyzHjTDpZc1e9XdYBS9hrdWBHMv2pgAa
+          NjMh2Mcxog21H03PttqCV6CylSmFTqt1z0oRm5RBz/y8BkeKmqwZBeh4Mtx1y5mK
+          j6IsZqhhLQh93F2odcEtFVEWV039Ncrkts43/4rq3DXkUu/byO35GJ7Npry+2/IG
+          ln+Tz7rK9L0rYqF/Ywy8RKKAPKtIjPxZJNPDNd4PWZern/HSi1IeJAkQmegqdWQq
+          yCODBw//Wbyib7/YK4VkZUwnWkFFLZvmmsuT5IhZ1fd+8jg0mBydKhSaU3ZHBBx7
+          DPrI9WvwX0UJR1JesESq5tL3DWIXCZmpwNh+r0VQrTyP0p/cWbkf2KeJYXGofWx/
+          nDj1hFQ+w8iolcuAGQpgQmzjim6CCItgrmocjtRgVuPqO5lUEx5jDWnDNUGr31fx
+          mH3k6Zwmhg8v0/aGvYpxxl/bid+Jj318fFoJcCChrtv12dbGNBFVeGTfp3i9qMvN
+          BZcmaj/zC2z1NDH3vQIVGo0qTLBnYlgy0NDrtQoelajZuHZU2OtmOFTiGO8fFqRf
+          5anmucFGvxdJzfrT/3QdRRMHrbn0qbAlxj7+wzL2y6yT4kZ8O92hJWMcTHc4uZ5L
+          cfAnQOvPSMPPbTTeCRXQhH+9vKo9mvnF3QWrEDnD0fmOoPbRlrg6ac8K7cKFiFYo
+          TqJGHMc3WWEKpTfbj3Z6EGT2jVcQfw8LjAxwhSkaZBAYwiObCKV7JDEq69VWCYjh
+          2Y+1etAp30whecrYAcn+a3apGydF62Z8thTA9zIHKmQTttfT46BXNLtXovTskc5z
+          2RNefuCRmFtr+gXpDNaceMLbiRYZ4NqRY7cYxpHlGfOAS3Ji+puRZfEfm59vHqJf
+          Jd+YIMrnZ4dAtxlNTntXiuMZkGSIZkGFHn7V4WXXSrvZDdEb0AvCwV8EGAECAAkF
+          AlVo8ucCGwwACgkQmegqdWQqyCPpqxAAgcaTPksGQy7lx4knxysYLTxsATB3Ct4F
+          6MYaDXUMiCcoaLPcOoRRLhPCaq5gIbzfakYAJwjsvycd9ooTfJVrhJTINy5ZHqgU
+          B/RA69I/V6dDAtxSPmMWDhNqZx2BsvVbhYtsRjigGe04ryVqFkQEO3k9a+v6sPvy
+          vAajhZOCEgLUTCKdfl3m9cKT8aRs9O0HycC3t3IFTev20OEMmjIjp9k7VQl7jG61
+          dxXOiqZxjpv2yiIFKTJzEQ//bg31PkeMxAPDyhkxyIBpS79s953qLPWVlmPWtgZs
+          YJCndEnDp2KnttdhK8FGJlwCpGDfoEjkMdUnWjdiHd5sHzwMqe2dm7osQ4KXCfik
+          OppKpwg8MPN3QeISuDmunXgXEP6bAV9n6mA/FMkxHAk3i8jqYfv/bIHyFa6lXsVf
+          SFsyo4/YCIOJ0mVFfV4TDDpFp0xvtF5aS57lTbajoTZI6oOivFBw9CgrIXGiMVkM
+          qX/fFsefHRQaG1aXV5Cniy3br4RwwaKjQJUW+iLUmK8+mt0fl4qZRQXo9TqZXtlV
+          L+qiwi+m3V44KMAA4HaHjdb8gwy8CN+skFT6sZvrgaVM/Ooh45LtQvsoG3ralTek
+          k6geoLcNK6lfTo00aucYuBx4EdTcnGHo8/iqi/OAAPgp5rQyZ2AiypqtbggEB9kj
+          Isnsrl8ITgs=
+          =CksN
+          -----END PGP PUBLIC KEY BLOCK-----
 
     - name: "Setup PATH"
       shell: bash
