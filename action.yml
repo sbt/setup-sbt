@@ -65,13 +65,13 @@ runs:
       env:
         SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
         SBT_DOWNLOADPATH: "${{ steps.cache-paths.outputs.sbt_downloadpath }}"
-      uses: carabiner-dev/actions/ampel/verify@3f3570da5629881672b9674b1778deecd81b799a
+      uses: carabiner-dev/actions/ampel/verify@360ffa1eb909b0105d4eccb6d6ef337911c34952 # v1.1.6
       with:
         policy: "git+https://github.com/carabiner-dev/policies#signature/signature.json"
         subject: "$SBT_DOWNLOADPATH/sbt-$SBT_RUNNER_VERSION.zip"
-        collector: "fs:$SBT_DOWNLOADPATH/"
+        collector: "fs:$SBT_DOWNLOADPATH/" # Collect signatures from download path
         signer: "key::rsassa-pkcs1v15::2EE0EA64E40A89B84B2DF73499E82A75642AC823"
-        fail: false
+        fail: false # Monitor only, don't fail the workflow yet.
         attest: false
         keydata: |
           -----BEGIN PGP PUBLIC KEY BLOCK-----
