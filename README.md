@@ -29,8 +29,10 @@ steps:
 
 ### Setting the runner version
 
-The `sbt` runner (Bash script that launches sbt) is typically compatible with all modern sbt releases,
-you might want to pin the runner to a specific version.
+The `sbt` runner is typically compatible with all modern sbt releases.
+However, the launcher distributed by sbt 2.x will require JDK 17.
+
+You can pin the `sbt` runner back to sbt 1.x to run JDK 8:
 
 ```yaml
 env:
@@ -40,12 +42,25 @@ steps:
 - name: Setup JDK
   uses: actions/setup-java@v5
   with:
-    distribution: temurin
-    java-version: 17
+    distribution: zulu
+    java-version: 8
     cache: sbt
 - uses: sbt/setup-sbt@v1
   with:
-    sbt-runner-version: 1.9.9
+    sbt-runner-version: 1.12.11
+- name: Build and test
+  shell: bash
+  run: sbt -v +test
+```
+
+### Opting out of disk cache
+
+By default setup-sbt enables the disk cache on sbt 2.x. This can be opted out as follows:
+
+```yaml
+- uses: sbt/setup-sbt@v1
+  with:
+    disk-cache: false
 - name: Build and test
   shell: bash
   run: sbt -v +test

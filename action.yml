@@ -5,6 +5,10 @@ inputs:
     description: "The runner version (The actual version is controlled via project/build.properties)"
     required: true
     default: 1.12.11
+  disk-cache:
+    description: "Enable sbt 2.x disk cache"
+    required: false
+    default: true
 runs:
   using: "composite"
   steps:
@@ -18,11 +22,18 @@ runs:
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           echo "sbt_toolpath=$RUNNER_TOOL_CACHE\\sbt\\$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
           echo "sbt_downloadpath=$RUNNER_TEMP\\_sbt" >> "$GITHUB_OUTPUT"
+          echo "sbt_diskcache=$HOME\\AppData\\Local\\sbt" >> "$GITHUB_OUTPUT"
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
+          echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
+          echo "sbt_diskcache=$HOME/Library/Caches/sbt" >> "$GITHUB_OUTPUT"
         else
           echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
           echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
+          echo "sbt_diskcache=$HOME/.cache/sbt" >> "$GITHUB_OUTPUT"
         fi
         echo "sbt_cachekey=$RUNNER_OS-sbt-$SBT_RUNNER_VERSION-$SBT_CACHE_KEY_VERSION" >> "$GITHUB_OUTPUT"
+        echo "sbt_diskcachekey=$RUNNER_OS-sbt-diskcache-$SBT_CACHE_KEY_VERSION" >> "$GITHUB_OUTPUT"
     - name: Check Tool Cache
       id: cache-tool-dir
       shell: bash
@@ -42,6 +53,13 @@ runs:
       with:
         path: ${{ steps.cache-paths.outputs.sbt_toolpath }}
         key: ${{ steps.cache-paths.outputs.sbt_cachekey }}
+    - name: sbt 2.x disk cache
+      id: disk-cache
+      if: inputs.disk-cache == 'true'
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: ${{ steps.cache-paths.outputs.sbt_diskcache }}
+        key: ${{ steps.cache-paths.outputs.sbt_diskcachekey }}
     - name: "Download and Install sbt"
       shell: bash
       env:
