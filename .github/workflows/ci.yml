@@ -12,15 +12,12 @@ jobs:
           - os: ubuntu-22.04
             java: 17
             distribution: temurin
-          - os: ubuntu-24.04
-            java: 8
-            distribution: zulu
           - os: macos-14
-            java: 8
+            java: 17
             distribution: zulu
           - os: windows-2022
-            java: 8
-            distribution: zulu
+            java: 17
+            distribution: temurin
     runs-on: ${{ matrix.os }}
     env:
       JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
@@ -33,6 +30,13 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: sbt
       - uses: ./
-      - name: Build and test
+      - name: Build and test root
         shell: bash
         run: sbt -v +test
+      - name: Build and test sbt 2
+        shell: bash
+        run: |
+          pushd example
+          sbt -v test
+          sbt -v test
+          popd
