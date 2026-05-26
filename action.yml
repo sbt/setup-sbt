@@ -22,7 +22,7 @@ runs:
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           echo "sbt_toolpath=$RUNNER_TOOL_CACHE\\sbt\\$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
           echo "sbt_downloadpath=$RUNNER_TEMP\\_sbt" >> "$GITHUB_OUTPUT"
-          echo "sbt_diskcache=$HOME\\AppData\\Local\\sbt" >> "$GITHUB_OUTPUT"
+          echo "sbt_diskcache=$LOCALAPPDATA\\sbt" >> "$GITHUB_OUTPUT"
         elif [[ "$RUNNER_OS" == "macOS" ]]; then
           echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
           echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
