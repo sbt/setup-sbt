@@ -17,7 +17,7 @@ runs:
       shell: bash
       env:
         SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
-        SBT_CACHE_KEY_VERSION: 1.1.6
+        SBT_CACHE_KEY_VERSION: 1.1.25
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           echo "sbt_toolpath=$RUNNER_TOOL_CACHE\\sbt\\$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
@@ -60,6 +60,7 @@ runs:
       with:
         path: ${{ steps.cache-paths.outputs.sbt_diskcache }}
         key: ${{ steps.cache-paths.outputs.sbt_diskcachekey }}-${{ hashFiles('**/*.scala', '**/*.sbt', '**/*.properties') }}
+        restore-keys: ${{ steps.cache-paths.outputs.sbt_diskcachekey }}
     - name: "Download and Install sbt"
       shell: bash
       env:
