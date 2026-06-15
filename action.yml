@@ -4,7 +4,7 @@ inputs:
   sbt-runner-version:
     description: "The runner version (The actual version is controlled via project/build.properties)"
     required: true
-    default: 2.0.0
+    default: 1.12.12
   disk-cache:
     description: "Enable sbt 2.x disk cache"
     required: false
