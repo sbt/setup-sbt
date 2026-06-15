@@ -1,9 +1,6 @@
 import java.util.regex.Pattern
 
-@transient
-lazy val updateYml = taskKey[Unit]("")
-
-updateYml := {
+TaskKey[Unit]("updateYml") := {
 
   val location = baseDirectory.value / "action.yml"
   val oldContent = IO.read(location)
