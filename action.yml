@@ -89,14 +89,11 @@ runs:
       id: "ampel-verify"
       # Skip on Windows/macOS until go-billy path fix lands: https://github.com/go-git/go-billy/issues/194
       if: runner.os == 'Linux' && steps.cache-tool-dir.outputs.cache-hit != 'true' && steps.cache-dir.outputs.cache-hit != 'true'
-      env:
-        SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
-        SBT_DOWNLOADPATH: "${{ steps.cache-paths.outputs.sbt_downloadpath }}"
       uses: carabiner-dev/actions/ampel/verify@94f29392187fe5082d1195a7d4cae3a7ddf09d9c # v1.2.1
       with:
         policy: "git+https://github.com/carabiner-dev/policies#signature/signature.json"
-        subject: "$SBT_DOWNLOADPATH/sbt-$SBT_RUNNER_VERSION.zip"
-        collector: "fs:$SBT_DOWNLOADPATH/" # Collect signatures from download path
+        subject: "${{ steps.cache-paths.outputs.sbt_downloadpath }}/sbt-${{ inputs.sbt-runner-version }}.zip"
+        collector: "fs:${{ steps.cache-paths.outputs.sbt_downloadpath }}/" # Collect signatures from download path
         signer: "key::rsassa-pkcs1v15::2EE0EA64E40A89B84B2DF73499E82A75642AC823"
         fail: false # Monitor only, don't fail the workflow yet.
         attest: false
