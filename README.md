@@ -30,7 +30,7 @@ steps:
 ### Setting the runner version
 
 The `sbt` runner is typically compatible with all modern sbt releases.
-However, the launcher distributed by sbt 2.x will require JDK 17.
+In the future, the launcher distributed by sbt 2.x may require JDK 17.
 
 You can pin the `sbt` runner back to sbt 1.x to run JDK 8:
 
