@@ -17,7 +17,7 @@ runs:
       shell: bash
       env:
         SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
-        SBT_CACHE_KEY_VERSION: 1.1.25
+        SBT_CACHE_KEY_VERSION: 1.1.26
       run: |
         JDK_VERSION=0
         if [[ -x "$(command -v java)" ]]; then
@@ -53,10 +53,10 @@ runs:
           mkdir -p "$SBT_TOOLPATH"
           echo "cache-hit=false" >> "$GITHUB_OUTPUT"
         fi
-    - name: Cache sbt distribution
+    - name: Restore sbt distribution cache
       id: cache-dir
       if: steps.cache-tool-dir.outputs.cache-hit != 'true'
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ steps.cache-paths.outputs.sbt_toolpath }}
         key: ${{ steps.cache-paths.outputs.sbt_cachekey }}
@@ -69,13 +69,19 @@ runs:
         key: ${{ steps.cache-paths.outputs.sbt_diskcachekey }}-${{ steps.cache-paths.outputs.sbt_monday }}-${{ hashFiles('**/*.sbt', '**/*.properties') }}
         restore-keys: ${{ steps.cache-paths.outputs.sbt_diskcachekey }}
     - name: "Download and Install sbt"
+      id: install
       shell: bash
       env:
         SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
         SBT_TOOLPATH: "${{ steps.cache-paths.outputs.sbt_toolpath }}"
         SBT_DOWNLOADPATH: "${{ steps.cache-paths.outputs.sbt_downloadpath }}"
-      if: steps.cache-tool-dir.outputs.cache-hit != 'true' && steps.cache-dir.outputs.cache-hit != 'true'
       run: |
+        # Install when the runner is missing on disk, whatever actions/cache's
+        # cache-hit said: a hit can restore a partial $SBT_TOOLPATH.
+        if [[ -f "$SBT_TOOLPATH/sbt/bin/sbt" ]]; then
+          echo "downloaded=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
         mkdir -p "$SBT_DOWNLOADPATH"
         curl -sL "https://github.com/sbt/sbt/releases/download/v$SBT_RUNNER_VERSION/sbt-$SBT_RUNNER_VERSION.zip" > \
           "$SBT_DOWNLOADPATH/sbt-$SBT_RUNNER_VERSION.zip"
@@ -85,10 +91,14 @@ runs:
         cd "$SBT_DOWNLOADPATH"
         unzip -o "sbt-$SBT_RUNNER_VERSION.zip" -d "$SBT_TOOLPATH"
 
+        # Never cache or PATH a partial extraction.
+        test -f "$SBT_TOOLPATH/sbt/bin/sbt"
+        echo "downloaded=true" >> "$GITHUB_OUTPUT"
+
     - name: "Verify the sbt distribution signature"
       id: "ampel-verify"
       # Skip on Windows/macOS until go-billy path fix lands: https://github.com/go-git/go-billy/issues/194
-      if: runner.os == 'Linux' && steps.cache-tool-dir.outputs.cache-hit != 'true' && steps.cache-dir.outputs.cache-hit != 'true'
+      if: runner.os == 'Linux' && steps.install.outputs.downloaded == 'true'
       uses: carabiner-dev/actions/ampel/verify@94f29392187fe5082d1195a7d4cae3a7ddf09d9c # v1.2.1
       with:
         policy: "git+https://github.com/carabiner-dev/policies#signature/signature.json"
@@ -187,6 +197,16 @@ runs:
           Isnsrl8ITgs=
           =CksN
           -----END PGP PUBLIC KEY BLOCK-----
+
+    - name: "Save sbt distribution cache"
+      id: cache-dir-save
+      # Explicit save (not combined actions/cache) so the cache is written only
+      # after a verified install — never the auto post-job save of a partial dir.
+      if: steps.install.outputs.downloaded == 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.cache-paths.outputs.sbt_toolpath }}
+        key: ${{ steps.cache-paths.outputs.sbt_cachekey }}
 
     - name: "Setup PATH"
       shell: bash
