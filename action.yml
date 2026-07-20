@@ -17,7 +17,7 @@ runs:
       shell: bash
       env:
         SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
-        SBT_CACHE_KEY_VERSION: 1.1.25
+        SBT_CACHE_KEY_VERSION: 1.5.2
       run: |
         JDK_VERSION=0
         if [[ -x "$(command -v java)" ]]; then
@@ -81,10 +81,11 @@ runs:
           "$SBT_DOWNLOADPATH/sbt-$SBT_RUNNER_VERSION.zip"
         curl -sL "https://github.com/sbt/sbt/releases/download/v$SBT_RUNNER_VERSION/sbt-$SBT_RUNNER_VERSION.zip.asc" > \
           "$SBT_DOWNLOADPATH/sbt-$SBT_RUNNER_VERSION.zip.asc"
-
         cd "$SBT_DOWNLOADPATH"
         unzip -o "sbt-$SBT_RUNNER_VERSION.zip" -d "$SBT_TOOLPATH"
-
+        if [[ ! -f "$SBT_TOOLPATH/sbt/bin/sbt" ]]; then
+          exit 1
+        fi
     - name: "Verify the sbt distribution signature"
       id: "ampel-verify"
       # Skip on Windows/macOS until go-billy path fix lands: https://github.com/go-git/go-billy/issues/194
