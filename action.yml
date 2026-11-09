@@ -102,7 +102,7 @@ runs:
       id: "ampel-verify"
       # Skip on Windows/macOS until go-billy path fix lands: https://github.com/go-git/go-billy/issues/194
       if: runner.os == 'Linux' && steps.cache-tool-dir2.outputs.cache-hit != 'true'
-      uses: carabiner-dev/actions/ampel/verify@32587e82f960d49b36101e8c45d1956e511965d3 # v1.2.9
+      uses: carabiner-dev/actions/ampel/verify@63d43b57262e65927864c8f7ca0a6a8efe06acc0 # v1.3.1
       with:
         policy: "git+https://github.com/carabiner-dev/policies@971d670e93f2fb4da304b0e5f071066dc4686a5a#signature/signature.json"
         subject: "${{ steps.cache-paths.outputs.sbt_downloadpath }}/sbt-${{ inputs.sbt-runner-version }}.zip"
