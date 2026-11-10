@@ -13,13 +13,13 @@ jobs:
         include:
           - os: ubuntu-22.04
             java: 17
-            distribution: temurin
+            distribution: zulu
           - os: macos-15
             java: 17
             distribution: zulu
           - os: windows-2022
             java: 17
-            distribution: temurin
+            distribution: zulu
     runs-on: ${{ matrix.os }}
     env:
       JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
@@ -31,6 +31,7 @@ jobs:
           distribution: ${{ matrix.distribution }}
           java-version: ${{ matrix.java }}
           cache: sbt
+          check-latest: "true"
       - uses: ./
       - name: Build and test root
         shell: bash
