@@ -46,7 +46,10 @@ cat > "$test_dir/bin/date" <<'BASH'
 #!/usr/bin/env bash
 set -euo pipefail
 if [[ "$RUNNER_OS" == "macOS" ]]; then
-  exec "$SBT_TEST_REAL_DATE" -j -f '%Y-%m-%d' "$SBT_TEST_DATE" "$@"
+  # BSD date needs adjustment options before the fixed input date, and the
+  # output format after it.
+  date_format=${!#}
+  exec "$SBT_TEST_REAL_DATE" -j -f '%Y-%m-%d' "${@:1:$(($# - 1))}" "$SBT_TEST_DATE" "$date_format"
 elif [[ "${1:-}" == "-d" ]]; then
   exec "$SBT_TEST_REAL_DATE" "$@"
 else
