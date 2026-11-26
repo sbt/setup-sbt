@@ -55,7 +55,7 @@ steps:
 
 ### Opting out of disk cache
 
-By default setup-sbt enables the disk cache on sbt 2.x. This can be opted out as follows:
+By default setup-sbt saves and restores the sbt 2.x disk cache. This can be opted out as follows:
 
 ```yaml
 - uses: sbt/setup-sbt@v1
@@ -65,6 +65,39 @@ By default setup-sbt enables the disk cache on sbt 2.x. This can be opted out as
   shell: bash
   run: sbt -v +test
 ```
+
+### Controlling disk-cache restores
+
+The disk-cache key includes the OS, architecture, Java version, cache-format version,
+the date of the current week's Monday, and a hash of the build's `.sbt` and
+`.properties` files. Weeks follow the runner's local date.
+By default, a missing primary key falls back to caches from any week with the same
+OS, architecture, Java version, and cache-format version.
+The weekly date rotates cache archives; it does not force a fresh cache each week.
+
+Use `disk-cache-restore-policy` to control these fallback restores:
+
+| Value | Behavior when the primary key is missing |
+| --- | --- |
+| `all` (default) | Allow fallback restores from any week, preserving the existing behavior. |
+| `current-week` | Allow fallback restores only from the current week's dated prefix, including caches with a different build-file hash. |
+| `none` | Supply no additional restore prefixes. Normal primary-key lookup still applies. |
+
+```yaml
+- uses: sbt/setup-sbt@v1
+  with:
+    disk-cache-restore-policy: current-week
+```
+
+These policies keep the same primary save key and do not affect sbt distribution
+caching. `disk-cache: false` skips both saving and restoring the build disk cache.
+
+The policy controls which archive is restored, not the age of its individual
+entries. For example, another workflow using `all` can carry older entries into
+an archive saved under the current week's key. Existing local caches on persistent
+runners and other sbt caches are also unaffected.
+To force test execution with sbt 2 while retaining compilation caching, use
+`testFull`; changing the archive restore policy does not guarantee tests run.
 
 Why is this GitHub Action needed?
 ---------------------------------

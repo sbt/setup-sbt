@@ -9,6 +9,10 @@ inputs:
     description: "Enable sbt 2.x disk cache"
     required: false
     default: true
+  disk-cache-restore-policy:
+    description: "Fallback restores for the sbt 2.x disk cache: all, current-week, or none"
+    required: false
+    default: all
 runs:
   using: "composite"
   steps:
@@ -18,6 +22,7 @@ runs:
       env:
         SBT_RUNNER_VERSION: ${{ inputs.sbt-runner-version }}
         SBT_CACHE_KEY_VERSION: 1.5.3
+        SBT_DISK_CACHE_RESTORE_POLICY: ${{ inputs.disk-cache-restore-policy }}
       run: |
         JDK_VERSION=0
         if [[ -x "$(command -v java)" ]]; then
@@ -27,20 +32,35 @@ runs:
           echo "sbt_toolpath=$RUNNER_TOOL_CACHE\\sbt\\$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
           echo "sbt_downloadpath=$RUNNER_TEMP\\_sbt" >> "$GITHUB_OUTPUT"
           echo "sbt_diskcache=$LOCALAPPDATA\\sbt" >> "$GITHUB_OUTPUT"
-          echo "sbt_monday=$(date -d "last Monday" +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
         elif [[ "$RUNNER_OS" == "macOS" ]]; then
           echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
           echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
           echo "sbt_diskcache=$HOME/Library/Caches/sbt" >> "$GITHUB_OUTPUT"
-          echo "sbt_monday=$(date -v-monday -v+0d +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
         else
           echo "sbt_toolpath=$RUNNER_TOOL_CACHE/sbt/$SBT_RUNNER_VERSION" >> "$GITHUB_OUTPUT"
           echo "sbt_downloadpath=$RUNNER_TEMP/_sbt" >> "$GITHUB_OUTPUT"
           echo "sbt_diskcache=$HOME/.cache/sbt" >> "$GITHUB_OUTPUT"
-          echo "sbt_monday=$(date -d "last Monday" +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
         fi
+        if [[ "$RUNNER_OS" == "macOS" ]]; then
+          SBT_MONDAY=$(date -v-monday -v+0d +%Y-%m-%d)
+        else
+          read -r SBT_TODAY SBT_WEEKDAY <<< "$(date '+%Y-%m-%d %u')"
+          SBT_MONDAY=$(date -d "$SBT_TODAY $((SBT_WEEKDAY - 1)) days ago" +%Y-%m-%d)
+        fi
+        SBT_DISK_CACHE_KEY="$RUNNER_OS-$RUNNER_ARCH-java$JDK_VERSION-sbt-diskcache-$SBT_CACHE_KEY_VERSION"
+        case "$SBT_DISK_CACHE_RESTORE_POLICY" in
+          all) SBT_DISK_CACHE_RESTORE_KEYS="$SBT_DISK_CACHE_KEY" ;;
+          current-week) SBT_DISK_CACHE_RESTORE_KEYS="$SBT_DISK_CACHE_KEY-$SBT_MONDAY-" ;;
+          none) SBT_DISK_CACHE_RESTORE_KEYS="" ;;
+          *)
+            echo "::error::disk-cache-restore-policy must be one of: all, current-week, none"
+            exit 1
+            ;;
+        esac
+        echo "sbt_monday=$SBT_MONDAY" >> "$GITHUB_OUTPUT"
         echo "sbt_cachekey=$RUNNER_OS-$RUNNER_ARCH-sbt-runner-$SBT_RUNNER_VERSION-$SBT_CACHE_KEY_VERSION" >> "$GITHUB_OUTPUT"
-        echo "sbt_diskcachekey=$RUNNER_OS-$RUNNER_ARCH-java$JDK_VERSION-sbt-diskcache-$SBT_CACHE_KEY_VERSION" >> "$GITHUB_OUTPUT"
+        echo "sbt_diskcachekey=$SBT_DISK_CACHE_KEY" >> "$GITHUB_OUTPUT"
+        echo "sbt_diskcache_restore_keys=$SBT_DISK_CACHE_RESTORE_KEYS" >> "$GITHUB_OUTPUT"
     - name: Check tool cache
       id: cache-tool-dir
       shell: bash
@@ -79,7 +99,7 @@ runs:
       with:
         path: ${{ steps.cache-paths.outputs.sbt_diskcache }}
         key: ${{ steps.cache-paths.outputs.sbt_diskcachekey }}-${{ steps.cache-paths.outputs.sbt_monday }}-${{ hashFiles('**/*.sbt', '**/*.properties') }}
-        restore-keys: ${{ steps.cache-paths.outputs.sbt_diskcachekey }}
+        restore-keys: ${{ steps.cache-paths.outputs.sbt_diskcache_restore_keys }}
     - name: "Download and Install sbt"
       shell: bash
       env:

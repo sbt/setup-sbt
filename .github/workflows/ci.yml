@@ -25,6 +25,9 @@ jobs:
       JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check disk-cache policies
+        shell: bash
+        run: bash .github/tests/disk-cache-policy.sh
       - name: Setup JDK
         uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
@@ -43,3 +46,88 @@ jobs:
           sbt -v test
           sbt -v test
           popd
+
+  cache-restore-policy:
+    # Cache writes may be unavailable to pull requests from forks. Their normal
+    # test matrix still checks policy generation on all three operating systems.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Prepare synthetic cache keys
+        id: policy
+        shell: bash
+        run: bash .github/tests/disk-cache-policy.sh --github-output
+      - name: Save a previous-week cache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/disk-cache-policy-fixture
+          key: ${{ steps.policy.outputs.previous }}
+      - name: Allow an older cache by default
+        id: all
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/disk-cache-policy-fixture
+          key: ${{ steps.policy.outputs.primary }}
+          restore-keys: ${{ steps.policy.outputs.all }}
+          lookup-only: true
+      - name: Exclude the previous week
+        id: current-week
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/disk-cache-policy-fixture
+          key: ${{ steps.policy.outputs.primary }}
+          restore-keys: ${{ steps.policy.outputs.current-week }}
+          lookup-only: true
+      - name: Supply no fallback prefixes
+        id: none
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/disk-cache-policy-fixture
+          key: ${{ steps.policy.outputs.primary }}
+          restore-keys: ${{ steps.policy.outputs.none }}
+          lookup-only: true
+      - name: Check previous-week results
+        env:
+          EXPECTED: ${{ steps.policy.outputs.previous }}
+          ALL_MATCH: ${{ steps.all.outputs.cache-matched-key }}
+          WEEK_MATCH: ${{ steps.current-week.outputs.cache-matched-key }}
+          NONE_MATCH: ${{ steps.none.outputs.cache-matched-key }}
+        run: |
+          test "$ALL_MATCH" = "$EXPECTED"
+          test -z "$WEEK_MATCH"
+          test -z "$NONE_MATCH"
+      - name: Save a same-week cache with a different build hash
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/disk-cache-policy-fixture
+          key: ${{ steps.policy.outputs.same-week }}
+      - name: Restore the same-week prefix
+        id: same-week
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/disk-cache-policy-fixture
+          key: ${{ steps.policy.outputs.primary }}
+          restore-keys: ${{ steps.policy.outputs.current-week }}
+          lookup-only: true
+      - name: Save a primary-key cache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/disk-cache-policy-fixture
+          key: ${{ steps.policy.outputs.primary }}
+      - name: Restore the primary key without fallback prefixes
+        id: primary
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/disk-cache-policy-fixture
+          key: ${{ steps.policy.outputs.primary }}
+          restore-keys: ${{ steps.policy.outputs.none }}
+          lookup-only: true
+      - name: Check same-week and primary-key results
+        env:
+          EXPECTED_WEEK: ${{ steps.policy.outputs.same-week }}
+          ACTUAL_WEEK: ${{ steps.same-week.outputs.cache-matched-key }}
+          PRIMARY_HIT: ${{ steps.primary.outputs.cache-hit }}
+        run: |
+          test "$ACTUAL_WEEK" = "$EXPECTED_WEEK"
+          test "$PRIMARY_HIT" = true
